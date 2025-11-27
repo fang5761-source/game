@@ -69,6 +69,7 @@
                <button data-time="1" onclick="setTimeLimit(1)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">1 秒</button>
                <button data-time="2" onclick="setTimeLimit(2)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">2 秒</button>
                <button data-time="3" onclick="setTimeLimit(3)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">3 秒</button>
+               <button data-time="5" onclick="setTimeLimit(5)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">5 秒</button>
            </div>
        </div>
        
@@ -90,7 +91,7 @@
        <!-- 時間限制進度條 -->
        <div class="w-full h-2 bg-gray-200 rounded-full mb-3 overflow-hidden shadow-inner">
            <div id="timer-bar"
-                class="h-full bg-green-500 transition-all duration-100 ease-linear"
+                class="h-full bg-green-500 transition-all duration-150 ease-linear"
                 style="width: 100%;">
            </div>
        </div>
@@ -131,12 +132,12 @@
 
    // 時間限制相關變數
    let timerId = null;
-   let selectedTimeLimit = 2;
-   const TICK_INTERVAL = 100;
+   let selectedTimeLimit = 2; // 預設 2 秒
+   const TICK_INTERVAL = 300; // 降低刷新頻率，較穩定
    let timeRemaining = selectedTimeLimit;
 
-   // AudioContext 共用，避免一直建立造成當機
-   let audioContext = null;
+   // 禁用音效，避免 AudioContext 造成瀏覽器當機
+   function playSound() { return; }
 
    // DOM 元素引用
    const scoreDisplay = document.getElementById('score-display');
@@ -150,44 +151,10 @@
    const gameScreen = document.getElementById('game-screen');
 
    // --- 輔助函式 ---
-
    function safeClearTimer() {
        if (timerId !== null) {
            clearInterval(timerId);
            timerId = null;
-       }
-   }
-
-   function playSound(isCorrect) {
-       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-       if (!AudioCtx) return; // 裝置不支援就靜音
-
-       try {
-           if (!audioContext) {
-               audioContext = new AudioCtx();
-           }
-
-           const ctx = audioContext;
-           const oscillator = ctx.createOscillator();
-           const gainNode = ctx.createGain();
-           oscillator.connect(gainNode);
-           gainNode.connect(ctx.destination);
-
-           if (isCorrect) {
-               oscillator.type = 'triangle';
-               oscillator.frequency.setValueAtTime(600, ctx.currentTime);
-               gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
-               oscillator.start();
-               oscillator.stop(ctx.currentTime + 0.1);
-           } else {
-               oscillator.type = 'square';
-               oscillator.frequency.setValueAtTime(150, ctx.currentTime);
-               gainNode.gain.setValueAtTime(0.35, ctx.currentTime);
-               oscillator.start();
-               oscillator.stop(ctx.currentTime + 0.2);
-           }
-       } catch (e) {
-           console.warn('playSound error, muted:', e);
        }
    }
 
@@ -201,7 +168,7 @@
    // --- 遊戲流程控制 ---
 
    function setTimeLimit(seconds) {
-       if (seconds < 1 || seconds > 3) return;
+       if (seconds < 1 || seconds > 10) return;
        selectedTimeLimit = seconds;
 
        timeButtons.forEach(btn => {
@@ -215,7 +182,6 @@
    }
 
    function timeUp() {
-       // 若這題已經結束，就不要再執行一次
        if (!isGameActive) {
            safeClearTimer();
            return;
@@ -238,35 +204,17 @@
 
        timeRemaining = selectedTimeLimit;
        timerBar.style.width = '100%';
-       timerBar.classList.remove('bg-red-500', 'bg-yellow-500');
-       timerBar.classList.add('bg-green-500');
 
        timerId = setInterval(() => {
-           try {
-               timeRemaining -= TICK_INTERVAL / 1000;
+           timeRemaining -= TICK_INTERVAL / 1000;
 
-               if (timeRemaining <= 0) {
-                   timeUp();
-                   return;
-               }
-
-               const percentage = (timeRemaining / selectedTimeLimit) * 100;
-               timerBar.style.width = `${percentage}%`;
-
-               if (percentage < 25) {
-                   timerBar.classList.remove('bg-yellow-500', 'bg-green-500');
-                   timerBar.classList.add('bg-red-500');
-               } else if (percentage < 50) {
-                   timerBar.classList.remove('bg-red-500', 'bg-green-500');
-                   timerBar.classList.add('bg-yellow-500');
-               } else {
-                   timerBar.classList.remove('bg-red-500', 'bg-yellow-500');
-                   timerBar.classList.add('bg-green-500');
-               }
-           } catch (e) {
-               console.error('Timer error:', e);
-               safeClearTimer();
+           if (timeRemaining <= 0) {
+               timeUp();
+               return;
            }
+
+           const percentage = (timeRemaining / selectedTimeLimit) * 100;
+           timerBar.style.width = `${percentage}%`;
        }, TICK_INTERVAL);
    }
 
@@ -286,7 +234,7 @@
    }
 
    function checkAnswer(selectedAnswer, buttonElement) {
-       if (!isGameActive) return; // 避免重複點擊
+       if (!isGameActive) return;
 
        isGameActive = false;
        safeClearTimer();
@@ -367,6 +315,10 @@
 
    function generateQuestionContent() {
        try {
+           // 先重設畫面，避免累積太多 DOM 狀態
+           buttonsContainer.innerHTML = '';
+           feedbackElement.textContent = '';
+
            const num1 = Math.floor(Math.random() * 9) + 1;
            const num2 = Math.floor(Math.random() * 9) + 1;
 
