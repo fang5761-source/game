@@ -151,6 +151,7 @@
    const gameScreen = document.getElementById('game-screen');
 
    // --- 輔助函式 ---
+
    function safeClearTimer() {
        if (timerId !== null) {
            clearInterval(timerId);
@@ -327,31 +328,16 @@
            questionElement.textContent = `${num1} × ${num2} = ?`;
            scoreDisplay.textContent = `${currentQuestionIndex + 1}/${TOTAL_QUESTIONS_IN_ROUND}`;
 
+           // 安全生成選項：從 1~81 中選出 3 個不同於正解的數字
            const options = [correctAnswer];
-           const uniqueAnswers = new Set([correctAnswer]);
-
-           while (options.length < 4) {
-               let incorrectAnswer;
-
-               if (options.length === 1) {
-                   const modifier = Math.random() < 0.5 ? 1 : -1;
-                   incorrectAnswer = correctAnswer + modifier * (Math.floor(Math.random() * 5) + 1);
-               } else if (options.length === 2) {
-                   let factorToChange = Math.random() < 0.5 ? num1 : num2;
-                   factorToChange += Math.random() < 0.5 ? 1 : -1;
-                   factorToChange = Math.max(1, Math.min(9, factorToChange));
-                   incorrectAnswer = factorToChange * (factorToChange === num1 ? num2 : num1);
-               } else {
-                   incorrectAnswer = Math.floor(Math.random() * 81) + 1;
-               }
-
-               incorrectAnswer = Math.max(1, Math.min(81, incorrectAnswer));
-
-               if (!uniqueAnswers.has(incorrectAnswer) && Math.abs(incorrectAnswer - correctAnswer) > 1) {
-                   uniqueAnswers.add(incorrectAnswer);
-                   options.push(incorrectAnswer);
+           const pool = [];
+           for (let v = 1; v <= 81; v++) {
+               if (v !== correctAnswer) {
+                   pool.push(v);
                }
            }
+           shuffleArray(pool);
+           options.push(pool[0], pool[1], pool[2]);
 
            shuffleArray(options);
            displayOptions(options);
