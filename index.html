@@ -1,136 +1,157 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>九九乘法大挑戰</title>
-   <!-- 載入 Tailwind CSS -->
-   <script src="https://cdn.tailwindcss.com"></script>
-   <style>
-       /* UI 調整 */
-       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-       body {
-           font-family: 'Inter', sans-serif;
-           background-color: #f7f7f7;
-           display: flex;
-           justify-content: center;
-           align-items: flex-start;
-           min-height: 98vh;
-           padding-top: 8px;
-       }
-       .game-container {
-           max-width: 320px;
-           width: 100%;
-           background-color: #ffffff;
-           box-shadow: 0 6px 15px -2px rgba(0, 0, 0, 0.1);
-           border-radius: 16px;
-           padding: 12px;
-           margin: 8px;
-       }
-       .answer-button {
-           transition: all 0.15s ease-in-out;
-           transform: scale(1);
-       }
-       .answer-button:active {
-           transform: scale(0.98);
-       }
-       #feedback-message {
-           min-height: 70px;
-           line-height: 1.4;
-           display: flex;
-           flex-direction: column;
-           justify-content: center;
-           align-items: center;
-       }
-       @keyframes clap {
-           0%, 100% { transform: scale(1) rotate(0deg); }
-           25% { transform: scale(1.2) rotate(5deg); }
-           50% { transform: scale(1) rotate(-5deg); }
-           75% { transform: scale(1.2) rotate(5deg); }
-       }
-       .clap-animation {
-           animation: clap 0.5s ease-in-out infinite;
-       }
-   </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>九九乘法大挑戰</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 98vh;
+            padding-top: 8px;
+        }
+
+        .game-container {
+            max-width: 320px;
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 6px 15px -2px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 12px;
+            margin: 8px;
+            /* 新增：卡片微浮起動畫 */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .game-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 按鈕手感強化（包含開始、時間選擇、答案、重玩） */
+        button {
+            transition: transform 0.15s ease;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .answer-button {
+            transition: all 0.15s ease-in-out;
+            transform: scale(1);
+        }
+
+        .answer-button:active {
+            transform: scale(0.96);
+        }
+
+        #feedback-message {
+            min-height: 70px;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes clap {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(5deg); }
+            50% { transform: scale(1) rotate(-5deg); }
+            75% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        .clap-animation {
+            animation: clap 0.5s ease-in-out infinite;
+        }
+    </style>
 </head>
 <body>
 
 <div class="game-container text-center">
-   <h1 class="text-xl font-extrabold mb-3 text-purple-600">
-       九九乘法大挑戰
-   </h1>
-   
-   <!-- 遊戲設定 / 開始畫面 -->
-   <div id="setup-screen">
-       <!-- 時間選擇區塊 -->
-       <div class="mb-4 p-3 bg-purple-100 rounded-lg shadow-inner">
-           <p class="text-xs font-semibold text-purple-700 mb-2">每題時間限制 (秒):</p>
-           <div id="time-selector" class="flex justify-center space-x-1">
-               <button data-time="1" onclick="setTimeLimit(1)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">1 秒</button>
-               <button data-time="2" onclick="setTimeLimit(2)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">2 秒</button>
-               <button data-time="3" onclick="setTimeLimit(3)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">3 秒</button>
-               <button data-time="5" onclick="setTimeLimit(5)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">5 秒</button>
-           </div>
-       </div>
-       
-       <button id="start-button"
-               class="w-full py-3 mb-2 bg-green-500 text-white text-base font-bold rounded-xl hover:bg-green-600 transition duration-150 ease-in-out shadow-lg"
-               onclick="startGame()">
-           開始挑戰 (共 10 題)
-       </button>
+    <h1 class="text-xl font-extrabold mb-3 text-purple-600">
+        九九乘法大挑戰
+    </h1>
 
-<div class="mt-4 text-xs text-gray-400">
-        v1
+    <!-- 遊戲設定 / 開始畫面 -->
+    <div id="setup-screen">
+        <!-- 時間選擇區塊 -->
+        <div class="mb-4 p-3 bg-purple-100 rounded-lg shadow-inner">
+            <p class="text-xs font-semibold text-purple-700 mb-2">每題時間限制 (秒):</p>
+            <div id="time-selector" class="flex justify-center space-x-1">
+                <button data-time="1" onclick="setTimeLimit(1)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">1 秒</button>
+                <button data-time="2" onclick="setTimeLimit(2)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">2 秒</button>
+                <button data-time="3" onclick="setTimeLimit(3)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">3 秒</button>
+                <button data-time="5" onclick="setTimeLimit(5)" class="time-btn py-0.5 px-2 text-xs font-bold rounded-full transition duration-150">5 秒</button>
+            </div>
+        </div>
+
+        <button id="start-button"
+                class="w-full py-3 mb-2 bg-green-500 text-white text-base font-bold rounded-xl hover:bg-green-600 transition duration-150 ease-in-out shadow-lg"
+                onclick="startGame()">
+            開始挑戰 (共 10 題)
+        </button>
+
+        <!-- 版本號 -->
+        <div class="mt-4 text-xs text-gray-400">
+            v1
+        </div>
     </div>
 
+    <!-- 遊戲進行畫面 -->
+    <div id="game-screen" class="hidden">
+        <!-- 分數/進度顯示 -->
+        <div class="mb-3 p-1.5 bg-purple-100 rounded-lg shadow-inner">
+            <p class="text-xs font-semibold text-purple-700">回合進度:</p>
+            <span id="score-display" class="text-xl font-black text-purple-900">0/10</span>
+        </div>
 
-   </div>
+        <!-- 時間限制進度條 -->
+        <div class="w-full h-2 bg-gray-200 rounded-full mb-3 overflow-hidden shadow-inner">
+            <div id="timer-bar"
+                 class="h-full bg-green-500 transition-all duration-100 ease-linear"
+                 style="width: 100%;">
+            </div>
+        </div>
 
-   <!-- 遊戲進行畫面 -->
-   <div id="game-screen" class="hidden">
-       <!-- 分數/進度顯示 -->
-       <div class="mb-3 p-1.5 bg-purple-100 rounded-lg shadow-inner">
-           <p class="text-xs font-semibold text-purple-700">回合進度:</p>
-           <span id="score-display" class="text-xl font-black text-purple-900">0/10</span>
-       </div>
-       
-       <!-- 時間限制進度條 -->
-       <div class="w-full h-2 bg-gray-200 rounded-full mb-3 overflow-hidden shadow-inner">
-           <div id="timer-bar"
-                class="h-full bg-green-500 transition-all duration-150 ease-linear"
-                style="width: 100%;">
-           </div>
-       </div>
+        <!-- 問題區塊 -->
+        <div class="mb-4 p-3 bg-pink-50 rounded-xl border-4 border-pink-200">
+            <p id="question" class="text-2xl font-extrabold text-gray-800">
+                ? × ? = ?
+            </p>
+        </div>
 
-       <!-- 問題區塊 -->
-       <div class="mb-4 p-3 bg-pink-50 rounded-xl border-4 border-pink-200">
-           <p id="question" class="text-2xl font-extrabold text-gray-800">
-               ? × ? = ?
-           </p>
-       </div>
+        <!-- 答案按鈕區塊 -->
+        <div id="answer-buttons" class="grid grid-cols-2 gap-2 mb-3">
+            <!-- 按鈕將由 JS 動態生成 -->
+        </div>
+    </div>
 
-       <!-- 答案按鈕區塊 -->
-       <div id="answer-buttons" class="grid grid-cols-2 gap-2 mb-3">
-           <!-- 按鈕將由 JS 動態生成 -->
-       </div>
-   </div>
+    <!-- 提示/結果訊息 -->
+    <div id="feedback-message" class="text-sm font-semibold mt-3">
+        <!-- 訊息/總結由 JS 動態更新 -->
+    </div>
 
-   <!-- 提示/結果訊息 -->
-   <div id="feedback-message" class="text-sm font-semibold mt-3">
-       <!-- 訊息/總結將由 JS 動態更新 -->
-   </div>
-   
-   <!-- 重玩按鈕 -->
-   <button id="reset-button"
-           class="hidden w-full py-2 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition duration-150 ease-in-out shadow-md mt-3"
-           onclick="resetToSetup()">
-       再玩一次
-   </button>
+    <!-- 重玩按鈕 -->
+    <button id="reset-button"
+            class="hidden w-full py-2 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition duration-150 ease-in-out shadow-md mt-3"
+            onclick="resetToSetup()">
+        再玩一次
+    </button>
 </div>
 
-
+<!-- 載入遊戲主程式 -->
 <script src="game.js?v=1"></script>
-
 
 </body>
 </html>
